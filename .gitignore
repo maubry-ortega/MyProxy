@@ -1,0 +1,27 @@
+# Binaries
+myproxy
+myproxy.small
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Operating System
+.DS_Store
+Thumbs.db
+
+# Project Specific
+.gemini/
+brain/
+
+# Testing
+*.test
+coverage.out
