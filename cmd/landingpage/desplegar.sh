@@ -39,7 +39,7 @@ docker run -d \
     --label "myproxy.domain=$DOMAIN" \
     --label "myproxy.fallback=true" \
     --label "myproxy.port=3000" \
-    --env "PROXY_API_URL=http://myproxy:8080/api/apps" \
+    --env "PROXY_API_URL=http://myproxy:8080" \
     --restart unless-stopped \
     "$IMAGE_NAME"
 

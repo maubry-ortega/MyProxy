@@ -9,17 +9,15 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = process.env.PORT || 3000;
-const proxyAPI = process.env.PROXY_API_URL || 'http://localhost:8080/api/apps';
+const proxyAPI = process.env.PROXY_API_URL || 'http://localhost:8080';
 
 app.use(cors());
 
 // Proxy /api/apps to the MyProxy API
-app.use('/api/apps', createProxyMiddleware({
+app.use(createProxyMiddleware({
     target: proxyAPI,
     changeOrigin: true,
-    pathRewrite: {
-        '^/api/apps': '/api/apps', // or wherever the actual endpoint is
-    },
+    pathFilter: '/api/apps',
     onProxyRes: function (proxyRes, req, res) {
         proxyRes.headers['Access-Control-Allow-Origin'] = '*';
     },
