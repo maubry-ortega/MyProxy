@@ -42,9 +42,10 @@ func (r *Route) NextTarget() string {
 }
 
 type Router struct {
-	Routes     map[string]*Route
-	IpLimiter  *middleware.IPLimiter
-	mu         sync.RWMutex
+	Routes         map[string]*Route
+	FallbackDomain string
+	IpLimiter      *middleware.IPLimiter
+	mu             sync.RWMutex
 }
 
 func NewRouter() *Router {
@@ -64,6 +65,18 @@ func (r *Router) GetRoutes() map[string]*Route {
 		copy[k] = v
 	}
 	return copy
+}
+
+func (r *Router) SetFallbackDomain(domain string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.FallbackDomain = domain
+}
+
+func (r *Router) GetFallbackDomain() string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.FallbackDomain
 }
 
 func (r *Router) AddRoute(domain, targetURL string) {
@@ -151,6 +164,11 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	r.mu.RLock()
 	route, ok := r.Routes[domain]
+	if !ok && r.FallbackDomain != "" {
+		telemetry.Logger.Info("Falling back to default route", zap.String("original_host", domain), zap.String("fallback", r.FallbackDomain))
+		domain = r.FallbackDomain
+		route, ok = r.Routes[domain]
+	}
 	r.mu.RUnlock()
 
 	if !ok {

@@ -93,6 +93,20 @@ func TestCoreFunctionality(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("FallbackRoute", func(t *testing.T) {
+		fallbackDomain := "landing.my.os"
+		r.AddRoute(fallbackDomain, backend.URL)
+		r.FallbackDomain = fallbackDomain
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "http://unregistered.host", nil)
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected 200 OK via fallback, got %d", w.Code)
+		}
+	})
 }
 
 func TestRemoveTarget(t *testing.T) {

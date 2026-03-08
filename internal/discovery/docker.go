@@ -64,7 +64,8 @@ func RegisterContainer(cli *client.Client, r *proxy.Router, containerID string) 
 	if domainLabel == "" {
 		domainLabel = inspect.Config.Labels["my.os.domain"]
 	}
-	if domainLabel == "" {
+	isFallback := inspect.Config.Labels["myproxy.fallback"] == "true"
+	if domainLabel == "" && !isFallback {
 		return
 	}
 
@@ -95,8 +96,15 @@ func RegisterContainer(cli *client.Client, r *proxy.Router, containerID string) 
 
 	for _, domain := range domains {
 		domain = strings.TrimSpace(domain)
+		if domain == "" {
+			continue
+		}
 		if strings.HasSuffix(domain, CorporateDomain) {
 			r.AddRoute(domain, target)
+			if isFallback {
+				r.SetFallbackDomain(domain)
+				telemetry.Logger.Info("Fallback domain registered", zap.String("domain", domain))
+			}
 			if rateLimit > 0 {
 				r.SetRateLimit(domain, rateLimit)
 			}
@@ -115,7 +123,8 @@ func UnregisterContainer(cli *client.Client, r *proxy.Router, containerID string
 	if domainLabel == "" {
 		domainLabel = inspect.Config.Labels["my.os.domain"]
 	}
-	if domainLabel == "" {
+	isFallback := inspect.Config.Labels["myproxy.fallback"] == "true"
+	if domainLabel == "" && !isFallback {
 		return
 	}
 
@@ -141,6 +150,11 @@ func UnregisterContainer(cli *client.Client, r *proxy.Router, containerID string
 		domain = strings.TrimSpace(domain)
 		if strings.HasSuffix(domain, CorporateDomain) {
 			r.RemoveTarget(domain, target)
+			if isFallback {
+				if r.GetFallbackDomain() == domain {
+					r.SetFallbackDomain("")
+				}
+			}
 		}
 	}
 }
