@@ -1,0 +1,16 @@
+FROM alpine:latest AS certs
+RUN apk add --no-cache openssl && \
+    mkdir -p /certs && \
+    openssl req -x509 -newkey rsa:4096 -keyout /certs/myos.key -out /certs/myos.crt \
+        -days 3650 -nodes \
+        -subj "/CN=*.my.os" \
+        -addext "subjectAltName=DNS:*.my.os,DNS:my.os"
+
+FROM alpine:latest
+RUN apk add --no-cache ca-certificates
+COPY --from=certs /certs/myos.crt /certs/myos.crt
+COPY --from=certs /certs/myos.key /certs/myos.key
+COPY myproxy-bin /myproxy
+RUN chmod +x /myproxy
+EXPOSE 80 443 8080
+ENTRYPOINT ["/myproxy"]

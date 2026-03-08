@@ -25,3 +25,5 @@ brain/
 # Testing
 *.test
 coverage.out
+
+myproxy-bin

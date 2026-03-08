@@ -79,6 +79,13 @@ func (r *Router) GetFallbackDomain() string {
 	return r.FallbackDomain
 }
 
+func (r *Router) DomainExists(domain string) bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	_, ok := r.Routes[domain]
+	return ok
+}
+
 func (r *Router) AddRoute(domain, targetURL string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -103,7 +110,10 @@ func (r *Router) AddRoute(domain, targetURL string) {
 			Targets: []*health.Target{newTarget},
 		}
 	}
-	telemetry.Logger.Info("Route added", zap.String("domain", domain), zap.String("target", targetURL))
+	telemetry.Logger.Info("Route updated", 
+		zap.String("domain", domain), 
+		zap.String("target", targetURL),
+		zap.Int("total_targets", len(r.Routes[domain].Targets)))
 }
 
 func (r *Router) SetRateLimit(domain string, rps float64) {
@@ -154,7 +164,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	domain := req.Host
 	ip := strings.Split(req.RemoteAddr, ":")[0]
 
-	middleware.ApplySecurityHeaders(w)
+	middleware.ApplySecurityHeaders(w, req)
 
 	if !r.IpLimiter.Allow(ip) {
 		telemetry.RateLimitHits.WithLabelValues(domain, "ip").Inc()

@@ -16,3 +16,14 @@ node_modules/
 dist/
 vendor/
 .dockerignore
+build
+tmp
+
+*.log
+*.md
+
+Dockerfile
+docker-compose.yml
+
+tests
+scripts

@@ -22,5 +22,5 @@ FROM scratch
 
 COPY --from=builder /app/myproxy /myproxy
 
-EXPOSE 80
+EXPOSE 80 443 8080
 ENTRYPOINT ["/myproxy"]
